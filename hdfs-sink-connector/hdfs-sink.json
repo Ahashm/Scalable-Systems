@@ -1,0 +1,13 @@
+{
+    "name": "hdfs-sink",
+    "config": {
+      "connector.class": "com.mongodb.kafka.connect.HdfsSinkConnector",
+      "topics": "connecttest",
+      "tasks.max": "1",
+      "hdfs.url": "hdfs://localhost:9000",
+      "flush.size": "3",
+      "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+      "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+      "value.converter.schemas.enable": false
+    }
+  }
