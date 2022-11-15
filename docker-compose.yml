@@ -148,12 +148,25 @@ services:
     environment:
       - "SPARK_MASTER=spark://spark-master:7077"
 
+  mongodb_container:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
+
 volumes:
   hadoop_namenode:
   hadoop_datanode1:
   hadoop_datanode2:
   hadoop_datanode3:
+  mongodb_data_container:
 
 networks:
   default:
     name: big-data-network
+
+
