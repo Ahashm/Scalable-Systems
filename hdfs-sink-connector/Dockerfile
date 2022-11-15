@@ -1,4 +1,4 @@
-FROM confluentinc/cp-server-connect-base:7.3.0
+FROM confluentinc/cp-kafka-connect:latest
 
-RUN   confluent-hub install --no-prompt hpgrahsl/kafka-connect-mongodb:1.1.0 \
+RUN   confluent-hub install mongodb/kafka-connect-mongodb:latest \
    && confluent-hub install confluentinc/kafka-connect-hdfs:latest
