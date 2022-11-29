@@ -1,7 +1,7 @@
 FROM python:3
 
-RUN python -m pip install requests
-RUN pip install kafka-python
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
 WORKDIR /app
 
