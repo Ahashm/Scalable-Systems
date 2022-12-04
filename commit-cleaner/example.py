@@ -1,14 +1,19 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
-from pyspark.sql.functions import from_json, explode, split, to_json, array, col, struct, udf
+from pyspark.sql.functions import from_json, explode, split, to_json, array, col, struct, udf, lit
 from operator import add
 import locale
 locale.getdefaultlocale()
 locale.getpreferredencoding()
 
-@udf(returnType=StringType())
-def processValue(element):
-    return element
+def createFileStructureSchema():
+    return StructType()\
+        .add("filename", StringType())\
+        .add("additions", IntegerType())\
+        .add("deletions", IntegerType())\
+        .add("changes", IntegerType())\
+        .add("status", StringType())
+
 
 # Create SparkSession and configure it
 spark = SparkSession.builder.appName('streamTest') \
@@ -25,14 +30,23 @@ df = spark \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "kafka:9092") \
     .option("startingOffsets", "earliest")\
-    .option("subscribe", "connecttest") \
+    .option("subscribe", "connecttest")\
     .load()
 
-structureSchema = StructType().add("sha", StringType())
+structureSchema = StructType()\
+    .add("url", StringType())\
+    .add("commit", StructType().add("author", StructType().add("name", StringType()).add("email", StringType()).add("date", DateType())))\
+    .add("stats", StructType().add("additions", IntegerType()).add("deletions", IntegerType()).add("total", IntegerType()))\
+    .add("files", ArrayType(createFileStructureSchema()))\
+
 data_as_string = df.selectExpr("CAST(value AS STRING)")
 data_as_json = data_as_string.select(from_json(col("value"), structureSchema).alias("data")).select("data.*")
 
-data_as_json.select(to_json(struct(data_as_json[x] for x in data_as_json.columns)).alias("value")).select("value")\
+data_as_json = data_as_json.withColumn("repo", getRepoName(data_as_json.url))
+data_as_json = data_as_json.select(col("commit.author").alias("commit_author"), col("stats"), col("files"), col("repo"))
+#data_as_json = data_as_json.withColumn("filess", col("files").withField("total_additions", lit(3)))
+
+data_as_json.select(to_json(struct([data_as_json[x] for x in data_as_json.columns])).alias("value")).select("value")\
         .writeStream\
         .format('kafka')\
         .option("kafka.bootstrap.servers", "kafka:9092") \
