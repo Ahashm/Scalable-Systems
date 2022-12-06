@@ -6,6 +6,15 @@ import locale
 locale.getdefaultlocale()
 locale.getpreferredencoding()
 
+@udf(returnType=StringType())
+def getRepoName(url):
+    reposName = "repos"
+    splitUrl = url.split("/")
+    repoIndex = splitUrl.index(reposName)
+    repoIndex+= 2
+    repoCommit = splitUrl[repoIndex]
+    return repoCommit
+
 def createFileStructureSchema():
     return StructType()\
         .add("filename", StringType())\
@@ -13,7 +22,6 @@ def createFileStructureSchema():
         .add("deletions", IntegerType())\
         .add("changes", IntegerType())\
         .add("status", StringType())
-
 
 # Create SparkSession and configure it
 spark = SparkSession.builder.appName('streamTest') \
@@ -34,8 +42,9 @@ df = spark \
     .load()
 
 structureSchema = StructType()\
-    .add("url", StringType())\
     .add("commit", StructType().add("author", StructType().add("name", StringType()).add("email", StringType()).add("date", DateType())))\
+    .add("url", StringType())\
+    .add("sha", StringType())\
     .add("stats", StructType().add("additions", IntegerType()).add("deletions", IntegerType()).add("total", IntegerType()))\
     .add("files", ArrayType(createFileStructureSchema()))\
 
@@ -43,8 +52,7 @@ data_as_string = df.selectExpr("CAST(value AS STRING)")
 data_as_json = data_as_string.select(from_json(col("value"), structureSchema).alias("data")).select("data.*")
 
 data_as_json = data_as_json.withColumn("repo", getRepoName(data_as_json.url))
-data_as_json = data_as_json.select(col("commit.author").alias("commit_author"), col("stats"), col("files"), col("repo"))
-#data_as_json = data_as_json.withColumn("filess", col("files").withField("total_additions", lit(3)))
+data_as_json = data_as_json.select(col("commit.author").alias("commit_author"), col("stats"), col("files"), col("repo"), col("sha"))
 
 data_as_json.select(to_json(struct([data_as_json[x] for x in data_as_json.columns])).alias("value")).select("value")\
         .writeStream\
