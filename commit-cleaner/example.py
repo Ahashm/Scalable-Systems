@@ -52,7 +52,7 @@ data_as_string = df.selectExpr("CAST(value AS STRING)")
 data_as_json = data_as_string.select(from_json(col("value"), structureSchema).alias("data")).select("data.*")
 
 data_as_json = data_as_json.withColumn("repo", getRepoName(data_as_json.url))
-data_as_json = data_as_json.select(col("commit.author").alias("commit_author"), col("stats"), col("files"), col("repo"), col("sha"))
+data_as_json = data_as_json.select(col("commit.author").alias("commit_author"), col("stats"), col("files"), col("repo"), col("sha").alias("id"))
 
 data_as_json.select(to_json(struct([data_as_json[x] for x in data_as_json.columns])).alias("value")).select("value")\
         .writeStream\
