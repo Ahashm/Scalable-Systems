@@ -7,6 +7,7 @@ To run app make sure you have:
 - NPM installed
 
 - Ngrok installed
+- sudo npm i -g ngrok --unsafe-perm=true --allow-root (windows/ubuntu)
 
 Open terminal - navigate to Scalable-systems directory and run following commands:
 
