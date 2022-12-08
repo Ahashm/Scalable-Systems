@@ -18,7 +18,7 @@ def getOrganizationRepos():
     for i in response:
         listOfRepoNames.append(i['name'])
     newUrlsList = getAllCommitsOfRepo(listOfRepoNames)
-    getLatestCommitFromRepo(newUrlsList)
+    response = getCommitFromRepoLink(newUrlsList)
 
 # Get all commits in a repository
 def getAllCommitsOfRepo(repo):
@@ -28,10 +28,6 @@ def getAllCommitsOfRepo(repo):
     for i in response:
         repoCommits.append(i[0]['url'])
     return repoCommits
-    
-# Get latest commit to repository on main branch
-def getLatestCommitFromRepo(urlList):
-    response = getCommitFromRepoLink(urlList)
 
 # Pagination and method to retrieve all data from organization
 def getResponseFromApi(url):
@@ -85,4 +81,5 @@ def testApiRateLimit():
     print(response.text)
 
 testApiRateLimit()
+
 getOrganizationRepos()
