@@ -6,9 +6,9 @@ from kafka import KafkaProducer
 # Variables
 ORG = "Spotify"
 githubApiBaseLink = "https://api.github.com/"
-githubToken1 = "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"
-githubToken = "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"
-kafkaTopic = 'Test'
+#Generate your own TOKEN from: https://github.com/settings/tokens
+githubToken = ""
+kafkaTopic = 'connecttest'
 
 # Get list of all repositories in a given organisation
 def getOrganizationRepos():
