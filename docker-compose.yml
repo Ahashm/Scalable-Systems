@@ -79,16 +79,54 @@ services:
     depends_on:
       - zookeeper
 
+  kafka-schema-registry:
+    image: confluentinc/cp-schema-registry:7.3.0
+    ports:
+      - "8034:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: kafka-schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8083
+
+  kafka-connect:
+    build:
+      context: ./hdfs-sink-connector
+      dockerfile: Dockerfile
+    ports:
+      - 8083:8083
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: "kafka:9092"
+      CONNECT_REST_PORT: 8083
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_GROUP_ID: kafka-connect-group
+      CONNECT_CONFIG_STORAGE_TOPIC: _connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: _connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: _connect-status
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://kafka-schema-registry:8034
+      CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: "1"
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components,/data/connect-jars
+    depends_on:
+      - zookeeper
+      - kafka
+
   kowl:
     image: quay.io/cloudhut/kowl:master # We use the master tag as we want to use the latest features e.g. creation of topics.
     ports:
-      - 8000:8080
+      - 8084:8080
     restart: unless-stopped
     depends_on:
       - zookeeper
       - kafka
     environment:
       KAFKA_BROKERS: kafka:9092
+      CONNECT_ENABLED: true
+      CONNECT_CLUSTERS_NAME: HDFS
+      CONNECT_CLUSTERS_URL: http://kafka-connect:8083
 
   spark-master:
     image: bde2020/spark-master:3.3.0-hadoop3.3
@@ -119,12 +157,25 @@ services:
     environment:
       - "SPARK_MASTER=spark://spark-master:7077"
 
+  mongodb_container:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data_container:/data/db
+
 volumes:
   hadoop_namenode:
   hadoop_datanode1:
   hadoop_datanode2:
   hadoop_datanode3:
+  mongodb_data_container:
 
 networks:
   default:
     name: big-data-network
+
+
