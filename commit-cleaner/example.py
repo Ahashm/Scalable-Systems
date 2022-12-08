@@ -58,4 +58,4 @@ data_as_json.select(to_json(struct([data_as_json[x] for x in data_as_json.column
     .option("kafka.bootstrap.servers", "kafka:9092") \
     .option("topic", "clean-commits") \
     .outputMode("append") \
-    .start().awaitTermination(100).stop()
+    .start().awaitTermination()
