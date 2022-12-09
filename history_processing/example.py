@@ -1,14 +1,14 @@
 from pyspark.sql import SparkSession
+from pyspark import SparkConf, SparkContext
 import locale
 locale.getdefaultlocale()
 locale.getpreferredencoding()
-
 
 my_spark = SparkSession \
     .builder \
     .appName("myAppName") \
     .master("spark://spark-master:7077")\
-    .config("spark.mongodb.input.uri", "mongodb://root:rootpassword@mongodb_container:27017/spotify.commits?readPreference=primaryPreferred") \
+    .config("spark.mongodb.input.uri", "mongodb://root:rootpassword@mongodb_container:27017/spotify.commits") \
     .config("spark.mongodb.output.uri", "mongodb://root:rootpassword@mongodb_container:27017/spotify.overview") \
     .config('spark.executor.cores', 1)\
     .config('spark.cores.max',1)\
