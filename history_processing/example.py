@@ -8,11 +8,14 @@ my_spark = SparkSession \
     .builder \
     .appName("myAppName") \
     .master("spark://spark-master:7077")\
-    .config("spark.mongodb.input.uri", "mongodb://root:rootpassword@mongodb_container:27017/spotify.commits") \
-    .config("spark.mongodb.output.uri", "mongodb://root:rootpassword@mongodb_container:27017/spotify.overview") \
-    .config('spark.executor.cores', 1)\
-    .config('spark.cores.max',1)\
-    .config('spark.executor.memory', '1g')\
+    .config("spark.mongodb.input.uri", "mongodb://root:rootpassword@mongodb_container:27017") \
+    .config("spark.mongodb.output.uri", "mongodb://root:rootpassword@mongodb_container:27017") \
+    .config("spark.mongodb.connection.uri", "mongodb://root:rootpassword@mongodb_container:27017") \
+    .config("spark.mongodb.database", "spotify") \
+    .config("spark.mongodb.collection", "commits") \
+    .config('spark.executor.cores', "1")\
+    .config('spark.cores.max',"1")\
+    .config("spark.executor.memory", "1g")\
     .config("spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.12:3.0.0")\
     .getOrCreate()
     
