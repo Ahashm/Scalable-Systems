@@ -32,16 +32,12 @@ def getFileType(fileName):
 
 files = my_spark.read.format("mongodb").load()
 
-files.printSchema()
-
-files.show()
-
 per_file = files.withColumn("file", explode(files.files))
 per_file = per_file.select(col("repo"), col("commit_author"), col("file"))
 per_file = per_file.withColumn("added_lines", totalAdditions(per_file.file))
 per_file = per_file.withColumn("filetype", getFileType(per_file.file.fileName))
-per_file = per_file.groupBy("repo", "filetype").agg(sum("added_lines").alias("added_lines"))
-per_file = per_file.groupBy("repo").agg(sum("added_lines").alias("total_lines"),collect_list(struct("filetype", "added_lines")).alias("filetypes"))
+per_file = per_file.groupBy("repo", "filetype").agg(sum("added_lines").alias("code_lines"))
+per_file = per_file.groupBy("repo").agg(sum("code_lines").alias("total_lines"),collect_list(struct("filetype", "code_lines")).alias("filetypes"))
 
 per_file.write.format("mongodb").mode("overwrite").option("database",
 "spotify").option("collection", "overview").save()
