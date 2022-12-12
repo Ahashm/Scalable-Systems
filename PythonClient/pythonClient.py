@@ -8,7 +8,7 @@ ORG = "Spotify"
 githubApiBaseLink = "https://api.github.com/"
 #Generate your own TOKEN from: https://github.com/settings/tokens
 githubToken = ""
-kafkaTopic = 'connecttest'
+kafkaTopic = 'commits'
 
 # Get list of all repositories in a given organisation
 def getOrganizationRepos():
