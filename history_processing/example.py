@@ -1,6 +1,6 @@
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, Window
 from pyspark.sql.types import *
-from pyspark.sql.functions import sum, explode, to_json, array, col, struct, udf, lit, collect_list
+from pyspark.sql.functions import sum, explode, to_json, array, col, struct, udf, collect_list, to_timestamp, hour, count, first
 import locale
 locale.getdefaultlocale()
 locale.getpreferredencoding()
@@ -30,16 +30,30 @@ def getFileType(fileName):
     addedCodeLines = fileName.split(".")
     return addedCodeLines[-1]
 
+def getFilesOverview(dataframe):
+    per_file = dataframe.withColumn("file", explode(files.files))
+    per_file = per_file.select(col("repo"), col("commit_author"), col("file"))
+    per_file = per_file.withColumn("added_lines", totalAdditions(per_file.file))
+    per_file = per_file.withColumn("filetype", getFileType(per_file.file.fileName))
+    per_file = per_file.groupBy("repo", "filetype").agg(sum("added_lines").alias("code_lines"))
+    per_file = per_file.groupBy("repo").agg(sum("code_lines").alias("total_lines"),collect_list(struct("filetype", "code_lines")).alias("filetypes"))
+    return per_file
+
+window = Window.partitionBy("repo", "commit_hour")
 files = my_spark.read.format("mongodb").load()
 
-per_file = files.withColumn("file", explode(files.files))
-per_file = per_file.select(col("repo"), col("commit_author"), col("file"))
-per_file = per_file.withColumn("added_lines", totalAdditions(per_file.file))
-per_file = per_file.withColumn("filetype", getFileType(per_file.file.fileName))
-per_file = per_file.groupBy("repo", "filetype").agg(sum("added_lines").alias("code_lines"))
-per_file = per_file.groupBy("repo").agg(sum("code_lines").alias("total_lines"),collect_list(struct("filetype", "code_lines")).alias("filetypes"))
+repo_overview = getFilesOverview(files)
 
-per_file.write.format("mongodb").mode("overwrite").option("database",
+active_working_hours = files.select(col("repo"), col("commit_author.date").alias("date"))
+active_working_hours = active_working_hours.withColumn("commit_hour", hour(to_timestamp("date")))
+active_working_hours = active_working_hours\
+    .withColumn("count", count("commit_hour").over(window))
+active_working_hours = active_working_hours.orderBy("count", ascending = False)
+active_working_hours = active_working_hours.groupBy("repo").agg(first("commit_hour").alias("commit_hour"))
+
+repo_overview = repo_overview.join(active_working_hours, repo_overview.repo == active_working_hours.repo, "inner")
+
+repo_overview.write.format("mongodb").mode("overwrite").option("database",
 "spotify").option("collection", "overview").save()
 
 
