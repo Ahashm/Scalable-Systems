@@ -36,7 +36,7 @@ df = spark \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "kafka:9092") \
     .option("startingOffsets", "earliest")\
-    .option("subscribe", "connecttest")\
+    .option("subscribe", "commits")\
     .load()
 
 structureSchema = StructType()\
