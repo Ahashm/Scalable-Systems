@@ -1,7 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import *
-from pyspark.sql.functions import from_json, explode, split, to_json, array, col, struct, udf, lit
-from operator import add
+from pyspark.sql.functions import from_json, to_json, col, struct, udf
 import locale
 locale.getdefaultlocale()
 locale.getpreferredencoding()
@@ -13,6 +12,8 @@ def getRepoName(url):
     repoIndex = splitUrl.index(reposName)
     repoIndex+= 2
     repoCommit = splitUrl[repoIndex]
+    if(repoCommit.startswith(".")):
+        repoCommit = repoCommit[1:]
     return repoCommit
 
 def createFileStructureSchema():
