@@ -71,7 +71,7 @@ repo_overview = repo_overview.join(active_working_hours, "repo", "inner")
 
 recent_contributors = files\
     .filter(add_months(to_timestamp(current_timestamp()), 1) > to_timestamp("commit_author.date"))\
-    .groupBy("repo").agg(collect_list("commit_author.name").alias("committers")).select(col("repo"), col("committers"))
+    .groupBy("repo").agg(collect_set("commit_author.name").alias("committers")).select(col("repo"), col("committers"))
 recent_contributors.printSchema()
 repo_overview = repo_overview.join(recent_contributors, "repo", "left_outer")
 
