@@ -23,7 +23,7 @@ def getOrganizationRepos():
     newUrlsList = getAllCommitsOfRepo(listOfRepoNames)
     response = getCommitFromRepoLink(newUrlsList)
     end = time.time()
-    print("Retriving and publishing elements to kafka, took " + len(newUrlsList) + " seconds")
+    print("Retrieving and publishing " + len(newUrlsList) + " elements to kafka, took " + end-start + " seconds")
 
 # Get all commits in a repository
 def getAllCommitsOfRepo(repo):
