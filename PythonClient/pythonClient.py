@@ -19,8 +19,11 @@ def getOrganizationRepos():
     response = getResponseFromApi(url)
     for i in response:
         listOfRepoNames.append(i['name'])
+    start = time.time()
     newUrlsList = getAllCommitsOfRepo(listOfRepoNames)
     response = getCommitFromRepoLink(newUrlsList)
+    end = time.time()
+    print("Retriving and publishing elements to kafka, took " + len(newUrlsList) + " seconds")
 
 # Get all commits in a repository
 def getAllCommitsOfRepo(repo):
@@ -90,7 +93,7 @@ def getCommitFromRepoLink(url):
         currentResponse = json.loads(jsonObjectsToString)
         kafkaProducerMethod(currentResponse)
     end = time.time()
-    print(end - start)
+    print(len(url) + " elements took " + end - start + " seconds to insert")
 
 
 def kafkaProducerMethod(response):
